@@ -56,7 +56,7 @@ jobs:
         with:
           name: safety-findings
           path: safety-report.json
-  zap:
+  dast-scan:
     name: Run OWASP ZAP for DAST
     runs-on: ubuntu-latest
 
@@ -74,19 +74,19 @@ jobs:
 
       - name: Start PyGoat
         run: |
-          nohup python app.py &   # Start the application in the background
-          sleep 10                # Wait for 10 seconds to ensure the app is running
+          nohup python3 manage.py runserver 0.0.0.0:8000 &   # Start the application in the background
+          sleep 10                                          # Wait for 10 seconds to ensure the app is running
 
       - name: Set up OWASP ZAP
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-11-jdk
-          curl -sLO https://github.com/zaproxy/zaproxy/releases/download/v2.10.0/ZAP_2_10_0_unix.sh
+          sudo apt-get install -y openjdk-11-jdk wget
+          wget https://github.com/zaproxy/zaproxy/releases/download/v2.10.0/ZAP_2_10_0_unix.sh
           chmod +x ZAP_2_10_0_unix.sh
           ./ZAP_2_10_0_unix.sh -q
 
       - name: Run ZAP Baseline Scan
-        run: ./ZAP_2_10_0/zap.sh -cmd -quickurl http://localhost:5000 -quickout zap_report.html
+        run: ./ZAP_2_10_0/zap.sh -cmd -quickurl http://0.0.0.0:8000 -quickout zap_report.html
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v2
