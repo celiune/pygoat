@@ -28,24 +28,31 @@ jobs:
          name: bandit-findings
          path: bandit-report.json
 
-  dependency-check:
-    name: Run OWASP Dependency-Check for SCA
+  sca_scan:
+    name: Run Safety for SCA
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Dependency-Check
-        run: |
-          curl -sO https://updates.owasp.org/dependency-check/dependency-check-6.5.1-release.zip
-          unzip dependency-check-6.5.1-release.zip
-
-      - name: Run Dependency-Check
-        run: ./dependency-check/bin/dependency-check.sh --project PyGoat --scan . --format ALL --out reports
-
-      - name: Upload Dependency-Check Report
-        uses: actions/upload-artifact@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          name: dependency-check-report
-          path: reports
-         
+          python-version: 3.8
+
+      - name: Install Safety
+        run: pip install safety
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Safety
+        run: safety check -r requirements.txt --full-report
+
+      - name: Upload Safety Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: safety-report
+          path: safety_report.json
